@@ -29,8 +29,8 @@ bl_info = {
     "location": "File Browser",
     "description": "Searches through files in file browser by name.",
     "warning": "",
-    "wiki_url": "http://wiki.blender.org/index.php/User:Sftd/"
-                "Extensions:2.6/Py/Scripts/Import-Export/File_Browser_Search",
+    "wiki_url": "http://wiki.blender.org/index.php/Extensions:2.6/"
+                "Py/Scripts/Import-Export/File_Browser_Search",
     "tracker_url": "http://projects.blender.org/tracker/"
                    "?func=detail&aid=30386&group_id=153&atid=467",
     "category": "Import-Export"
@@ -50,6 +50,7 @@ import re
 # Single search result
 class SearchResultsItem(bpy.types.PropertyGroup):
 
+    isBlendData = bpy.props.BoolProperty(name="Is Blend Data")
     isDirectory = bpy.props.BoolProperty(name="Is Directory")
     file = bpy.props.StringProperty(name="File Path",
                                     default="")
@@ -65,6 +66,7 @@ class FBSFileSelectOperator(bpy.types.Operator):
     bl_label = "Select File"
 
     searchBlendData = bpy.props.BoolProperty()
+    isBlendData = bpy.props.BoolProperty()
     isDirectory = bpy.props.BoolProperty()
     file = bpy.props.StringProperty()
     autoExecute = bpy.props.BoolProperty()
@@ -75,7 +77,8 @@ class FBSFileSelectOperator(bpy.types.Operator):
             if (self.searchBlendData):
                 t_file = os.path.dirname(t_file)
 
-            if (self.isDirectory or self.searchBlendData):
+            if (self.isDirectory or 
+                    (self.searchBlendData and not self.isBlendData)):
                 directory = context.space_data.params.directory
                 directory = os.path.join(directory, t_file)
                 context.window_manager.fbs_filter = ""
@@ -159,7 +162,7 @@ class FBSSearchResultsPanel(bpy.types.Panel):
         rows_left = search_results_length % columns_number 
 
         layout.prop(data=context.window_manager, property="fbs_filter",
-                    text="")
+                    text="", icon="VIEWZOOM")
         box = layout.box()                    
 
         row = box.row()
@@ -179,8 +182,13 @@ class FBSSearchResultsPanel(bpy.types.Panel):
                                            text=display_name,
                                            emboss=False, icon='FILE_FOLDER')
             else:
-                extension = search_result.fileExtension
                 operator_icon = "FILE_BLANK"
+
+                if (search_result.isBlendData):
+                    operator_icon = "BLENDER"
+
+                extension = search_result.fileExtension
+
                 for name, icon, extensions in self.EXTENSIONS:
                     if (extension in extensions):
                         operator_icon = icon
@@ -191,6 +199,7 @@ class FBSSearchResultsPanel(bpy.types.Panel):
                                            icon=operator_icon)
 
             operator.searchBlendData = search_blend_data
+            operator.isBlendData = search_result.isBlendData
             operator.isDirectory = search_result.isDirectory
             operator.file = search_result.file
             operator.autoExecute = auto_execute
@@ -274,7 +283,8 @@ class FBSSearchResultsPanel(bpy.types.Panel):
                     for dir in dirs:
                         if (self.addSearchResult(context, filter_prog,
                                                  directory_length, path,
-                                                 dir, True, extensions)):
+                                                 dir, True, extensions,
+                                                 False)):
                             results_count += 1
                             if (results_count >= MAX_RESULTS_COUNT):
                                 break
@@ -285,7 +295,8 @@ class FBSSearchResultsPanel(bpy.types.Panel):
                 for file in files:
                     if (self.addSearchResult(context, filter_prog,
                                              directory_length, path,
-                                             file, False, extensions)):
+                                             file, False, extensions,
+                                             False)):
                         results_count += 1
                         if (results_count >= MAX_RESULTS_COUNT):
                             break
@@ -308,7 +319,8 @@ class FBSSearchResultsPanel(bpy.types.Panel):
                 is_directory = os.path.isdir(os.path.join(directory, file))
                 if (not is_directory or search_for_directories):
                     if (self.addSearchResult(context, filter_prog, 0, '',
-                                             file, is_directory, extensions)):
+                                             file, is_directory, extensions,
+                                             False)):
                         results_count += 1
                         if (results_count >= MAX_RESULTS_COUNT):
                             break
@@ -351,7 +363,7 @@ class FBSSearchResultsPanel(bpy.types.Panel):
 
         for data in datas:
             self.addSearchResult(context, filter_prog, 0, '',
-                                 data, False, None)
+                                 data, False, None, True)
 
         return    
 
@@ -433,7 +445,8 @@ class FBSSearchResultsPanel(bpy.types.Panel):
         return re.compile(pattern)
 
     def addSearchResult(self, context, prog, directory_length,
-                        path, file, is_directory, extensions):
+                        path, file, is_directory, extensions,
+                        is_blend_data):
         file = (os.path.join(path, file))[directory_length:]
 
         if (prog.match(file.lower()) is None):
@@ -450,6 +463,7 @@ class FBSSearchResultsPanel(bpy.types.Panel):
                     return False
 
         search_result = context.window_manager.fbs_search_results.add()
+        search_result.isBlendData = is_blend_data
         search_result.isDirectory = is_directory
         search_result.file = file
         search_result.fileExtension = extension
@@ -474,7 +488,8 @@ def register():
     S.fbs_open_on_click = p.BoolProperty(name="Open On Click",
                                          default=True)
     prop = p.BoolProperty(name="Search in Subdirectories",
-                          update=fbs_initialize_search)
+                          update=fbs_initialize_search
+                          default = True)
     S.fbs_search_in_subdirectories = prop    
     prop = p.BoolProperty(name="Search for Directories",
                           update=fbs_initialize_search,
