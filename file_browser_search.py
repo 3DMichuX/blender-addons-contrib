@@ -32,7 +32,7 @@ bl_info = {
     "wiki_url": "http://wiki.blender.org/index.php/User:Sftd/"
                 "Extensions:2.6/Py/Scripts/Import-Export/File_Browser_Search",
     "tracker_url": "http://projects.blender.org/tracker/"
-                    "?func=detail&aid=30386&group_id=153&atid=467",
+                   "?func=detail&aid=30386&group_id=153&atid=467",
     "category": "Import-Export"
 }
 
@@ -50,12 +50,13 @@ import re
 # Single search result
 class SearchResultsItem(bpy.types.PropertyGroup):
 
-    isDirectory = bpy.props.BoolProperty(name = "Is Directory")
-    file = bpy.props.StringProperty(name = "File Path",
-                                    default = "")
-    fileName = bpy.props.StringProperty(name = "File Name",
-                                        default = "")
-    fileExtension = bpy.props.StringProperty(name = "File Extension")
+    isDirectory = bpy.props.BoolProperty(name="Is Directory")
+    file = bpy.props.StringProperty(name="File Path",
+                                    default="")
+    fileName = bpy.props.StringProperty(name="File Name",
+                                        default="")
+    fileExtension = bpy.props.StringProperty(name="File Extension")
+
 
 # File Browser Search Select Operator
 class FBSFileSelectOperator(bpy.types.Operator):
@@ -80,17 +81,18 @@ class FBSFileSelectOperator(bpy.types.Operator):
                 context.window_manager.fbs_filter = ""
                 # Apparentl bpy.ops.file.select_bookmark operators
                 # is actually select_directory operator...
-                bpy.ops.file.select_bookmark(dir = directory)
+                bpy.ops.file.select_bookmark(dir=directory)
             else:
                 context.space_data.params.filename = t_file
                 bpy.ops.file.execute('INVOKE_DEFAULT')
         else:
             context.space_data.params.filename = self.file
-            
+
         return {'FINISHED'}
 
+
 class FBSSearchResultsPanel(bpy.types.Panel):
-    
+
     # Place panel on the bottom left of the file Browser
     bl_idname = "FILE_PT_fbs_search_results_panel"
     bl_label = "Search:"
@@ -98,25 +100,29 @@ class FBSSearchResultsPanel(bpy.types.Panel):
     bl_region_type = 'CHANNELS'
 
     # (filter_name, icon_name, [extensions_list])
-    EXTENSIONS = (
-                  ("backup", "FILE_BACKUP", [".blend1", ".blend2"]),
+    EXTENSIONS = (("backup", "FILE_BACKUP", [".blend1", ".blend2"]),
                   ("blender", "FILE_BLEND", [".blend"]),
-                  ("font", "FILE_FONT", [".ttf", ".ttc", ".pfb", ".otf", ".otc"]),
-                  ("image", "FILE_IMAGE", [".png", ".tga", ".bmp", ".jpg", ".jpeg", 
-                                           ".sgi", ".rgb", ".rgba", ".tif", ".tiff", 
-                                           ".tx", ".jp2", ".j2c", ".hdr", ".dds", 
-                                           ".dpx", ".cin", ".exr", ".psd", ".pdd", ".psb"]),
-                  ("movie", "FILE_MOVIE", [".avi", ".flc", ".mov", ".movie", ".mp4",
-                                           ".m4v", ".m2v", ".m2t", ".m2ts", ".mts",
-                                           ".ts", ".mv", ".avs", ".wmv", ".ogv", ".ogg",
-                                           ".r3d", ".dv", ".mpeg", ".mpg", ".mpg2", ".vob",
-                                           ".mkv", ".flv", ".divx", ".xvid", ".mxf", ".webm"]),
+                  ("font", "FILE_FONT", [".ttf", ".ttc", ".pfb", ".otf",
+                                         ".otc"]),
+                  ("image", "FILE_IMAGE", [".png", ".tga", ".bmp", ".jpg",
+                                           ".jpeg", ".sgi", ".rgb", ".rgba",
+                                           ".tif", ".tiff", ".tx", ".jp2",
+                                           ".j2c", ".hdr", ".dds", ".dpx",
+                                           ".cin", ".exr", ".psd", ".pdd",
+                                           ".psb"]),
+                  ("movie", "FILE_MOVIE", [".avi", ".flc", ".mov", ".movie",
+                                           ".mp4", ".m4v", ".m2v", ".m2t",
+                                           ".m2ts", ".mts", ".ts", ".mv",
+                                           ".avs", ".wmv", ".ogv", ".ogg",
+                                           ".r3d", ".dv", ".mpeg", ".mpg",
+                                           ".mpg2", ".vob", ".mkv", ".flv",
+                                           ".divx", ".xvid", ".mxf", ".webm"]),
                   ("script", "FILE_SCRIPT", [".py"]),
-                  ("sound", "FILE_SOUND", [".wav", ".ogg", ".oga", ".mp3", ".mp2", ".ac3",
-                                           ".aac", ".flac", ".wma", ".eac3", ".aif",
-                                           ".aiff", ".m4a", ".mka"]),
-                  ("text", "FILE_TEXT", [".txt", ".glsl", ".osl", ".data"])
-                 )
+                  ("sound", "FILE_SOUND", [".wav", ".ogg", ".oga", ".mp3",
+                                           ".mp2", ".ac3", ".aac", ".flac",
+                                           ".wma", ".eac3", ".aif", ".aiff",
+                                           ".m4a", ".mka"]),
+                  ("text", "FILE_TEXT", [".txt", ".glsl", ".osl", ".data"]))
 
     @classmethod
     def poll(cls, context):
@@ -124,7 +130,7 @@ class FBSSearchResultsPanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        
+
         # Get current directory in the File Browser
         directory = context.space_data.params.directory
 
@@ -132,20 +138,19 @@ class FBSSearchResultsPanel(bpy.types.Panel):
         if (context.active_operator):
             if (context.active_operator.bl_idname == "WM_OT_link_append"):
                 search_blend_data = True
-            
-        
+
         # If the search was initialize or directory in File Browser
         # have changed refresh search results
         if context.window_manager.fbs_search_initialized or \
-            context.window_manager.fbs_directory != directory:                             
+           context.window_manager.fbs_directory != directory:                       
             context.window_manager.fbs_search_initialized = False
             context.window_manager.fbs_directory = directory
-            
+
             self.initializeSearch(context, search_blend_data)
 
         search_results = context.window_manager.fbs_search_results
         search_results_length = len(search_results)
-        
+
         hide_extensions = bpy.data.scenes[0].fbs_hide_extensions
         auto_execute = bpy.data.scenes[0].fbs_open_on_click
         columns_number = bpy.data.scenes[0].fbs_columns_number
@@ -153,9 +158,10 @@ class FBSSearchResultsPanel(bpy.types.Panel):
         rows_number = int(search_results_length / columns_number)
         rows_left = search_results_length % columns_number 
 
-        layout.prop(data = context.window_manager, property = "fbs_filter", text = "")
-        box = layout.box()                       
-         
+        layout.prop(data=context.window_manager, property="fbs_filter",
+                    text="")
+        box = layout.box()                    
+
         row = box.row()
         column = row.column()
         i = 0
@@ -167,25 +173,28 @@ class FBSSearchResultsPanel(bpy.types.Panel):
                 display_name = search_result.fileName
             else:
                 display_name = search_result.file
-                 
+
             if (search_result.isDirectory):
-                operator = column.operator("file.fbs_file_select", text = display_name, 
-                                            emboss=False, icon = 'FILE_FOLDER')
+                operator = column.operator("file.fbs_file_select",
+                                           text=display_name,
+                                           emboss=False, icon='FILE_FOLDER')
             else:
                 extension = search_result.fileExtension
-                icon = "FILE_BLANK"
-                for filter_name, filter_icon, filter_extensions in self.EXTENSIONS:
-                    if (extension in filter_extensions):
-                        icon = filter_icon
+                operator_icon = "FILE_BLANK"
+                for name, icon, extensions in self.EXTENSIONS:
+                    if (extension in extensions):
+                        operator_icon = icon
                         break
-                operator = column.operator("file.fbs_file_select", text = display_name, 
-                                             emboss=False, icon = icon)   
+                operator = column.operator("file.fbs_file_select",
+                                           text=display_name,
+                                           emboss=False,
+                                           icon=operator_icon)
 
-            operator.searchBlendData = search_blend_data                   
+            operator.searchBlendData = search_blend_data
             operator.isDirectory = search_result.isDirectory
-            operator.file = search_result.file 
+            operator.file = search_result.file
             operator.autoExecute = auto_execute
-            
+
             i += 1
             if row_i < rows_left:
                 if i % (rows_number + 1) == 0:
@@ -220,7 +229,7 @@ class FBSSearchResultsPanel(bpy.types.Panel):
         MAX_FILES_COUNT = 10000
         # maximum number of directories to check
         MAX_DIRS_COUNT = 1000
-        
+
         # get properties from file browser
         # filter
         filter = context.window_manager.fbs_filter
@@ -229,18 +238,22 @@ class FBSSearchResultsPanel(bpy.types.Panel):
         directory = context.window_manager.fbs_directory
         directory_length = len(directory)
         # search results
-        search_results = context.window_manager.fbs_search_results  
-        search_results_length = len(search_results)  
-        
+        search_results = context.window_manager.fbs_search_results
+        search_results_length = len(search_results)
+
         # clear search results
         for search_result in search_results:
             search_results.remove(0)
-        
+
         if (filter == ""):
             return None
 
-        search_in_subdirectories = bpy.data.scenes[0].fbs_search_in_subdirectories
-        search_for_directories = bpy.data.scenes[0].fbs_search_for_directories
+        # Take preferences from first scene
+        # for consistency.
+        scene = bpy.data.scenes[0]
+
+        search_in_subdirectories = scene.fbs_search_in_subdirectories
+        search_for_directories = scene.fbs_search_for_directories
 
         params = context.space_data.params
         extensions = None
@@ -252,9 +265,9 @@ class FBSSearchResultsPanel(bpy.types.Panel):
 
         # variables for counting files and dirs
         results_count = 0
-        files_count = 0;
-        dirs_count = 0;
-        
+        files_count = 0
+        dirs_count = 0
+
         if (search_in_subdirectories):
             for path, dirs, files in os.walk(directory):
                 if (search_for_directories):
@@ -267,7 +280,7 @@ class FBSSearchResultsPanel(bpy.types.Panel):
                                 break
                         files_count += 1
                         if (files_count >= MAX_FILES_COUNT):
-                            break                
+                            break
 
                 for file in files:
                     if (self.addSearchResult(context, filter_prog,
@@ -279,17 +292,17 @@ class FBSSearchResultsPanel(bpy.types.Panel):
                     files_count += 1
                     if (files_count >= MAX_FILES_COUNT):
                         break
-                        
+
                 if (results_count >= MAX_RESULTS_COUNT):
                     break
-                        
+
                 if (files_count >= MAX_FILES_COUNT):
                     break
-                
+
                 dirs_count += 1
                 if (dirs_count > MAX_DIRS_COUNT):
                     break
-                
+
         else:
             for file in os.listdir(directory):
                 is_directory = os.path.isdir(os.path.join(directory, file))
@@ -299,15 +312,15 @@ class FBSSearchResultsPanel(bpy.types.Panel):
                         results_count += 1
                         if (results_count >= MAX_RESULTS_COUNT):
                             break
-                files_count +=1
+                files_count += 1
                 if (files_count >= MAX_FILES_COUNT):
                     break
-        
+
         return
 
     def searchBlendData(self, context):
         filter = context.window_manager.fbs_filter
-        directory = context.window_manager.fbs_directory        
+        directory = context.window_manager.fbs_directory
 
         index = directory.find(".blend")
         # If not in .blend file search for files and directories.
@@ -319,27 +332,27 @@ class FBSSearchResultsPanel(bpy.types.Panel):
 
         for search_result in search_results:
             search_results.remove(0)
-        
+
         if (filter == ''):
             return
-    
-        index = index + 6
-        
+
+        index += 6
+
         file = directory[0:index]
-    
+
         data_name = directory[index + 1:-1]
-    
+
         if (data_name == ""):
             return
 
         datas = self.getBlendDataFromFile(file, data_name)
-        
+
         filter_prog = self.getProgFromFilter(filter)
 
         for data in datas:
             self.addSearchResult(context, filter_prog, 0, '',
                                  data, False, None)
-    
+
         return    
 
     def getBlendDataFromFile(self, file, data_name):
@@ -402,7 +415,7 @@ class FBSSearchResultsPanel(bpy.types.Panel):
     def getProgFromFilter(self, search_filter):
         # setup regular expression pattern
         pattern = ''
-        special_characters = ('\\', '.', '^', '$', '*', '+', '?', '{', 
+        special_characters = ('\\', '.', '^', '$', '*', '+', '?', '{',
                               '}', '[', ']', '|', '(', ')')
         # replace all special characters in search_filter
         for c in special_characters:
@@ -423,7 +436,7 @@ class FBSSearchResultsPanel(bpy.types.Panel):
                         path, file, is_directory, extensions):
         file = (os.path.join(path, file))[directory_length:]
 
-        if (prog.match(file.lower())) == None:
+        if (prog.match(file.lower()) is None):
             return False
 
         file_array = os.path.splitext(file)
@@ -433,44 +446,54 @@ class FBSSearchResultsPanel(bpy.types.Panel):
             extension = file_array[1]
             extension = extension.lower()
             if (extensions is not None):
-                if (not extension in extensions):
+                if (extension not in extensions):
                     return False
 
         search_result = context.window_manager.fbs_search_results.add()
         search_result.isDirectory = is_directory
         search_result.file = file
         search_result.fileExtension = extension
-        search_result.fileName = file_array[0]       
-        
+        search_result.fileName = file_array[0]
+
         return True
+
 
 # Update function for search property
 def fbs_initialize_search(self, context):
     context.window_manager.fbs_search_initialized = True
 
+
 def register():
     bpy.utils.register_module(__name__)
 
+    p = bpy.props
+
     # global properties set in Scene type
-    bpy.types.Scene.fbs_open_on_click = bpy.props.BoolProperty(name = "Open On Click", default = True)
-    bpy.types.Scene.fbs_search_in_subdirectories = bpy.props.BoolProperty(name = "Search in Subdirectories", update = fbs_initialize_search)
-    bpy.types.Scene.fbs_search_for_directories = bpy.props.BoolProperty(
-                                                               name = "Search for Directories",
-                                                               update = fbs_initialize_search,
-                                                               default = True)
-    bpy.types.Scene.fbs_hide_extensions = bpy.props.BoolProperty(name = "Hide Extensions",
-                                                                 default = False)
-    bpy.types.Scene.fbs_columns_number = bpy.props.IntProperty(name = "Number of Columns",
-                                                               default = 1, min = 1, max = 5)
-    
-    # temporary properties    
-    bpy.types.WindowManager.fbs_filter = bpy.props.StringProperty(update = fbs_initialize_search)
-    bpy.types.WindowManager.fbs_search_initialized = bpy.props.BoolProperty(default = False)    
-    bpy.types.WindowManager.fbs_directory = bpy.props.StringProperty()    
-    bpy.types.WindowManager.fbs_search_results = bpy.props.CollectionProperty(
-                                                                        type = SearchResultsItem)
-    
-    bpy.types.WindowManager.fbs_show_options = bpy.props.BoolProperty(name = "Show Options", default = False)
+    S = bpy.types.Scene
+
+    S.fbs_open_on_click = p.BoolProperty(name="Open On Click",
+                                         default=True)
+    prop = p.BoolProperty(name="Search in Subdirectories",
+                          update=fbs_initialize_search)
+    S.fbs_search_in_subdirectories = prop    
+    prop = p.BoolProperty(name="Search for Directories",
+                          update=fbs_initialize_search,
+                          default=True)
+    S.fbs_search_for_directories = prop
+    S.fbs_hide_extensions = p.BoolProperty(name="Hide Extensions",
+                                           default=False)
+    S.fbs_columns_number = p.IntProperty(name="Number of Columns",
+                                         default=1, min=1, max=5)
+
+    # temporary properties
+    WM = bpy.types.WindowManager 
+    WM.fbs_filter = p.StringProperty(update=fbs_initialize_search)
+    WM.fbs_search_initialized = p.BoolProperty(default=False)
+    WM.fbs_directory = p.StringProperty()
+    WM.fbs_search_results = p.CollectionProperty(type=SearchResultsItem)
+
+    WM.fbs_show_options = p.BoolProperty(name="Show Options", default=False)
+
 
 def unregister():
     del bpy.types.Scene.fbs_open_on_click
@@ -487,6 +510,6 @@ def unregister():
 
     bpy.utils.unregister_module(__name__)
 
+
 if __name__ == "__main__":
     register()
-    
