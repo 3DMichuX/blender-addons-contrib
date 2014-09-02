@@ -488,7 +488,7 @@ def register():
     S.fbs_open_on_click = p.BoolProperty(name="Open On Click",
                                          default=True)
     prop = p.BoolProperty(name="Search in Subdirectories",
-                          update=fbs_initialize_search
+                          update=fbs_initialize_search,
                           default = True)
     S.fbs_search_in_subdirectories = prop    
     prop = p.BoolProperty(name="Search for Directories",
