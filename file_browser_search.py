@@ -489,7 +489,7 @@ def register():
                                          default=True)
     prop = p.BoolProperty(name="Search in Subdirectories",
                           update=fbs_initialize_search,
-                          default = True)
+                          default = False)
     S.fbs_search_in_subdirectories = prop    
     prop = p.BoolProperty(name="Search for Directories",
                           update=fbs_initialize_search,
